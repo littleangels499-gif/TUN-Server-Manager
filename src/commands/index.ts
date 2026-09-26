@@ -9,6 +9,7 @@ import * as blueprint from "./blueprint";
 import * as backup from "./backup";
 import * as audit from "./audit";
 import * as embassy from "./embassy";
+import * as server from "./server";
 
 export interface CommandModule {
   key: string;
@@ -31,6 +32,7 @@ export const modules: CommandModule[] = [
   backup as CommandModule,
   audit as CommandModule,
   embassy as CommandModule,
+  server as CommandModule,
 ];
 
 export function buildTunCommand(): SlashCommandBuilder {

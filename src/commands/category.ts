@@ -21,9 +21,12 @@ export function register(tun: SlashCommandBuilder) {
       .addSubcommand((sub) =>
         sub
           .setName("delete")
-          .setDescription("Delete a category (channels inside are NOT deleted, they become uncategorized)")
+          .setDescription("Delete a category, optionally deleting its channels too")
           .addChannelOption((opt) =>
             opt.setName("category").setDescription("Category to delete").addChannelTypes(ChannelType.GuildCategory).setRequired(true)
+          )
+          .addBooleanOption((opt) =>
+            opt.setName("delete_channels").setDescription("Also delete every channel inside (default: leave them, uncategorized)").setRequired(false)
           )
       )
       .addSubcommand((sub) =>
@@ -78,19 +81,40 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     if (sub === "delete") {
       const category = interaction.options.getChannel("category", true);
-      const childCount = guild.channels.cache.filter((c: any) => c.parentId === category.id).size;
+      const deleteChannels = interaction.options.getBoolean("delete_channels") ?? false;
+      const children = guild.channels.cache.filter((c: any) => c.parentId === category.id);
       const proceed = await confirmAction({
         interaction,
         title: `Delete category "${category.name}"?`,
-        description: `This will delete the category itself. ${childCount} channel(s) inside will become uncategorized, not deleted.`,
+        description: deleteChannels
+          ? `⚠️ This will delete the category AND all ${children.size} channel(s) inside it. This cannot be undone except by restoring a backup.`
+          : `This will delete the category itself. ${children.size} channel(s) inside will become uncategorized, not deleted.`,
+        strong: deleteChannels,
       });
       if (!proceed) return;
 
       await createSafetyBackup(guild, interaction.user.id, `before deleting category ${category.name}`);
+
+      let deletedChannelCount = 0;
+      if (deleteChannels) {
+        for (const child of children.values()) {
+          await child.delete(`Deleted with parent category by ${interaction.user.tag} via /tun category delete`).catch(() => undefined);
+          deletedChannelCount++;
+          await new Promise((r) => setTimeout(r, 500)); // stay well clear of per-route rate limits
+        }
+      }
+
       const ch = await guild.channels.fetch(category.id);
       await ch?.delete(`Deleted by ${interaction.user.tag} via /tun category delete`);
-      await interaction.editReply({ embeds: [successEmbed("Category deleted", category.name)] });
-      return { target: category.name };
+      await interaction.editReply({
+        embeds: [
+          successEmbed(
+            "Category deleted",
+            deleteChannels ? `${category.name} + ${deletedChannelCount} channel(s) inside it` : category.name
+          ),
+        ],
+      });
+      return { target: category.name, details: { deleteChannels, deletedChannelCount } };
     }
 
     if (sub === "rename") {
