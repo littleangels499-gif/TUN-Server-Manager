@@ -168,8 +168,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       const summary =
         `Roles: +${result.rolesCreated.length} created, ${result.rolesUpdated.length} updated` +
         (result.rolesSkipped.length ? `, ${result.rolesSkipped.length} skipped (hierarchy)` : "") +
+        (result.everyoneUpdated ? "\n@everyone base permissions updated" : "") +
         `\nCategories: +${result.categoriesCreated.length} created, ${result.categoriesUpdated.length} updated` +
         `\nChannels: +${result.channelsCreated.length} created, ${result.channelsUpdated.length} updated` +
+        (result.overwritesSkipped.length
+          ? `\n⚠️ Some permission overwrites referenced roles/members not found on this server, so were skipped: ${[...new Set(result.overwritesSkipped)].slice(0, 10).join(", ")}`
+          : "") +
         (result.errors.length ? `\n⚠️ ${result.errors.length} error(s) occurred - see logs.` : "");
 
       await interaction.followUp({ embeds: [successEmbed(`Backup "${bk.label}" restored`, summary)] });

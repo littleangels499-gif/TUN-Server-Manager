@@ -69,6 +69,16 @@ export interface ServerSnapshot {
   guildId: string;
   guildName: string;
   roles: RoleSnapshot[];
+  /**
+   * The @everyone role's BASE permissions (separate from `roles` because
+   * @everyone can never be created/deleted/renamed/recolored - only its
+   * permission bitfield can ever be changed). `null` means "this blueprint
+   * doesn't define a base permission set" (e.g. a blueprint built from
+   * scratch via /tun blueprint commands, before anyone decided what
+   * @everyone should be able to do) - restore leaves it untouched in that
+   * case rather than guessing.
+   */
+  everyonePermissions: string | null;
   categories: CategorySnapshot[];
   channels: ChannelSnapshot[];
   /** Properties Discord exposes but this bot deliberately does not capture. */
@@ -80,3 +90,23 @@ export const UNSUPPORTED_PROPERTIES_NOTE =
   "welcome screen, server icon/banner/splash images, boost-perk state, " +
   "verification/2FA requirement level, integration-managed role properties, " +
   "and any Community-only settings. See docs/API_LIMITATIONS.md.";
+
+/**
+ * A brand-new, empty snapshot - the starting point for building a blueprint
+ * entirely through bot commands (`/tun blueprint create-empty`, then
+ * `add-category` / `add-channel` / `add-role` / `add-overwrite`), with no
+ * live server involved at all.
+ */
+export function createEmptySnapshot(guildName: string): ServerSnapshot {
+  return {
+    snapshotVersion: SNAPSHOT_VERSION,
+    capturedAt: new Date().toISOString(),
+    guildId: "unassigned",
+    guildName,
+    roles: [],
+    everyonePermissions: null,
+    categories: [],
+    channels: [],
+    unsupportedNote: UNSUPPORTED_PROPERTIES_NOTE,
+  };
+}

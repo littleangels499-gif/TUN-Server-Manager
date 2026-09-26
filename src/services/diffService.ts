@@ -24,6 +24,8 @@ export interface DiffResult {
     removed: DiffItem<ChannelSnapshot>[];
     changed: DiffItem<ChannelSnapshot>[];
   };
+  /** true only when `from` defines a base permission set AND it differs from `to`'s. */
+  everyoneChanged: boolean;
   isIdentical: boolean;
 }
 
@@ -65,6 +67,7 @@ export function diffSnapshots(from: ServerSnapshot, to: ServerSnapshot): DiffRes
     roles: { added: [], removed: [], changed: [] },
     categories: { added: [], removed: [], changed: [] },
     channels: { added: [], removed: [], changed: [] },
+    everyoneChanged: from.everyonePermissions !== null && from.everyonePermissions !== to.everyonePermissions,
     isIdentical: true,
   };
 
@@ -126,7 +129,8 @@ export function diffSnapshots(from: ServerSnapshot, to: ServerSnapshot): DiffRes
     !result.categories.changed.length &&
     !result.channels.added.length &&
     !result.channels.removed.length &&
-    !result.channels.changed.length;
+    !result.channels.changed.length &&
+    !result.everyoneChanged;
 
   return result;
 }
@@ -143,5 +147,6 @@ export function summarizeDiff(diff: DiffResult): string {
   section("Categories", diff.categories);
   section("Channels", diff.channels);
   section("Roles", diff.roles);
+  if (diff.everyoneChanged) lines.push("**@everyone base permissions**\n  🟡 ~ base permission set differs");
   return lines.length ? lines.join("\n") : "No differences found.";
 }

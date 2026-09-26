@@ -8,8 +8,9 @@ const CATEGORIES: Record<string, { title: string; lines: string[] }> = {
   structure: {
     title: "📐 Server Structure",
     lines: [
-      "`/tun category create|delete|rename|move|list` - manage categories",
+      "`/tun category create|delete|rename|move|list` - manage categories (delete has a `delete_channels` option to also remove everything inside)",
       "`/tun channel create|delete|rename|move|edit|list` - manage channels",
+      "`/tun server wipe` - delete EVERY category/channel, with up to 5 `protect_` slots to keep specific items (and anything inside a protected category)",
     ],
   },
   roles: {
@@ -27,9 +28,12 @@ const CATEGORIES: Record<string, { title: string; lines: string[] }> = {
     title: "🗺️ Blueprints",
     lines: [
       "`/tun blueprint save` - snapshot the current supported structure under a name",
+      "`/tun blueprint create-empty` - start a blank blueprint with NO live server needed",
+      "`/tun blueprint add-category|add-channel|add-role` - build a blueprint's structure from scratch",
+      "`/tun blueprint set-role-permission|set-everyone-permission|add-overwrite` - define permissions within a blueprint before it ever touches a server",
       "`/tun blueprint list|view|rename|delete` - manage saved blueprints",
       "`/tun blueprint compare` - preview live server vs a blueprint (no changes made)",
-      "`/tun blueprint restore` - preview + confirm restoring a blueprint",
+      "`/tun blueprint restore` - preview + confirm restoring a blueprint (recreates roles, channels, categories AND their permission overwrites)",
       "`/tun blueprint import|export` - portable JSON blueprint files",
     ],
   },

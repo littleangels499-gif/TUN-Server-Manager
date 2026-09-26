@@ -39,7 +39,7 @@ export async function captureSnapshot(guild: Guild): Promise<ServerSnapshot> {
   const channels = await guild.channels.fetch();
 
   const roles: RoleSnapshot[] = guild.roles.cache
-    .filter((r) => r.id !== guild.id) // exclude @everyone from role list (handled separately if ever needed)
+    .filter((r) => r.id !== guild.id) // @everyone is captured separately below - see everyonePermissions
     .map((r) => ({
       id: r.id,
       name: r.name,
@@ -52,6 +52,8 @@ export async function captureSnapshot(guild: Guild): Promise<ServerSnapshot> {
       icon: r.icon ?? null,
     }))
     .sort((a, b) => b.position - a.position);
+
+  const everyonePermissions = guild.roles.everyone.permissions.bitfield.toString();
 
   const categories: CategorySnapshot[] = [];
   const channelSnapshots: ChannelSnapshot[] = [];
@@ -100,6 +102,7 @@ export async function captureSnapshot(guild: Guild): Promise<ServerSnapshot> {
     guildId: guild.id,
     guildName: guild.name,
     roles,
+    everyonePermissions,
     categories,
     channels: channelSnapshots,
     unsupportedNote: UNSUPPORTED_PROPERTIES_NOTE,
