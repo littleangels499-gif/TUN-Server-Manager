@@ -1,0 +1,118 @@
+// TUN Server Manager - database schema
+//
+// Default provider is SQLite for local/small deployments. To switch to
+// Postgres (recommended for larger multi-server deployments, e.g. Railway),
+// see README.md -> "Switching to Postgres".
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// One row per Discord server the bot is installed in. Everything else
+// (blueprints, backups, logs, config) is scoped to a guildId so servers
+// are completely isolated from one another (spec #18).
+model Guild {
+  id        String   @id // Discord guild snowflake
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // JSON-encoded string[] of role IDs / user IDs authorized to run admin
+  // commands, on top of anyone with the native Discord Administrator
+  // permission (spec #14). Encoded as text for SQLite/Postgres portability.
+  adminRoleIds String @default("[]")
+  adminUserIds String @default("[]")
+
+  blueprints          Blueprint[]
+  backups             Backup[]
+  auditLogs           AuditLog[]
+  embassyChannels     EmbassyChannel[]
+  permissionTemplates PermissionTemplate[]
+}
+
+// Reusable set of Allow/Deny permission entries that can be applied to any
+// category or channel in one command (spec #5: "reusable permission
+// templates where practical").
+model PermissionTemplate {
+  id        String   @id @default(cuid())
+  guildId   String
+  guild     Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  name      String
+  creatorId String
+  // JSON-encoded array of { permission: string; state: "allow" | "deny" }
+  data      String
+  createdAt DateTime @default(now())
+
+  @@unique([guildId, name])
+  @@index([guildId])
+}
+
+// A saved, named snapshot of supported server structure (spec #6).
+model Blueprint {
+  id          String   @id @default(cuid())
+  guildId     String
+  guild       Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  version     Int      @default(1)
+  creatorId   String
+  // JSON-encoded ServerSnapshot (see src/types/snapshot.ts)
+  data        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([guildId, name])
+  @@index([guildId])
+}
+
+// A point-in-time disaster-recovery snapshot (spec #8). Structurally the
+// same payload as a Blueprint but created automatically or on demand for
+// recovery purposes rather than as a named "design" to restore to.
+model Backup {
+  id        String   @id @default(cuid())
+  guildId   String
+  guild     Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  label     String
+  // "manual" | "auto-safety" | "rollback-point"
+  reason    String   @default("manual")
+  creatorId String
+  data      String
+  createdAt DateTime @default(now())
+
+  @@index([guildId])
+}
+
+// Append-only administrative action log (spec #13).
+model AuditLog {
+  id        String   @id @default(cuid())
+  guildId   String
+  guild     Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  userId    String
+  command   String
+  target    String?
+  // JSON-encoded free-form details (what changed, params used, etc.)
+  details   String?
+  success   Boolean
+  errorMsg  String?
+  createdAt DateTime @default(now())
+
+  @@index([guildId, createdAt])
+}
+
+// Embassy channel <-> external alliance role mapping (spec #15).
+model EmbassyChannel {
+  id             String  @id @default(cuid())
+  guildId        String
+  guild          Guild   @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  channelId      String
+  allianceRoleId String
+  label          String?
+
+  @@unique([guildId, channelId])
+  @@index([guildId])
+}

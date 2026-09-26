@@ -1,0 +1,42 @@
+{
+  "exportFormat": "tun-blueprint-v1",
+  "name": "tun-current",
+  "description": "Starter TUN Blueprint representing the category structure from the developer specification (#22). Channel names inside each category are PLACEHOLDERS - edit this file (or better, run /tun blueprint save on the real, already-configured TUN server) before treating this as the source of truth. This file is data, not code: the bot never hardcodes this structure.",
+  "exportedAt": "2026-09-25T00:00:00.000Z",
+  "howToUse": [
+    "Recommended: on the real TUN server, run `/tun blueprint save name:tun-current` to capture the ACTUAL live structure instead of using this placeholder file.",
+    "Alternative: edit the channel names below to match reality, then run `/tun blueprint import` with this file attached, name:tun-current.",
+    "Either way, review with `/tun blueprint view name:tun-current` before ever restoring it onto a server."
+  ],
+  "snapshot": {
+    "snapshotVersion": 1,
+    "capturedAt": "2026-09-25T00:00:00.000Z",
+    "guildId": "PLACEHOLDER_GUILD_ID",
+    "guildName": "The Union of Nations",
+    "roles": [],
+    "categories": [
+      { "id": "placeholder-1", "name": "📌 START HERE", "position": 0, "overwrites": [] },
+      { "id": "placeholder-2", "name": "📰 COMMUNITY", "position": 1, "overwrites": [] },
+      { "id": "placeholder-3", "name": "📜 LEGISLATURE", "position": 2, "overwrites": [] },
+      { "id": "placeholder-4", "name": "🏢 EXECUTIVE GOVERNMENT", "position": 3, "overwrites": [] },
+      { "id": "placeholder-5", "name": "⚖️ JUSTICE & OVERSIGHT", "position": 4, "overwrites": [] },
+      { "id": "placeholder-6", "name": "🗳️ ELECTIONS", "position": 5, "overwrites": [] },
+      { "id": "placeholder-7", "name": "💰 ECONOMY & FINANCE", "position": 6, "overwrites": [] },
+      { "id": "placeholder-8", "name": "⚔️ DEFENCE & WAR", "position": 7, "overwrites": [] },
+      { "id": "placeholder-9", "name": "🌎 FOREIGN AFFAIRS", "position": 8, "overwrites": [] },
+      { "id": "placeholder-10", "name": "🌐 DIPLOMATIC MISSIONS", "position": 9, "overwrites": [] },
+      { "id": "placeholder-11", "name": "🎓 ACADEMY & MEMBERSHIP", "position": 10, "overwrites": [] },
+      { "id": "placeholder-12", "name": "🏅 RECOGNITION & HISTORY", "position": 11, "overwrites": [] },
+      { "id": "placeholder-13", "name": "🎭 TUN RPG", "position": 12, "overwrites": [] },
+      { "id": "placeholder-14", "name": "🤖 SYSTEMS", "position": 13, "overwrites": [] },
+      { "id": "placeholder-15", "name": "🗄️ ARCHIVES", "position": 14, "overwrites": [] }
+    ],
+    "channels": [
+      { "id": "ph-c1", "name": "welcome", "type": "GuildText", "parentName": "📌 START HERE", "position": 0, "topic": "PLACEHOLDER - replace with real channel list", "nsfw": false, "rateLimitPerUser": null, "bitrate": null, "userLimit": null, "overwrites": [] },
+      { "id": "ph-c2", "name": "rules", "type": "GuildText", "parentName": "📌 START HERE", "position": 1, "topic": null, "nsfw": false, "rateLimitPerUser": null, "bitrate": null, "userLimit": null, "overwrites": [] },
+      { "id": "ph-c3", "name": "general", "type": "GuildText", "parentName": "📰 COMMUNITY", "position": 0, "topic": null, "nsfw": false, "rateLimitPerUser": null, "bitrate": null, "userLimit": null, "overwrites": [] },
+      { "id": "ph-c4", "name": "announcements", "type": "GuildAnnouncement", "parentName": "📰 COMMUNITY", "position": 1, "topic": null, "nsfw": false, "rateLimitPerUser": null, "bitrate": null, "userLimit": null, "overwrites": [] }
+    ],
+    "unsupportedNote": "Not captured: message history, invites/vanity URL, webhooks, AutoMod rules, welcome screen, server icon/banner/splash images, boost-perk state, verification/2FA requirement level, integration-managed role properties, and any Community-only settings. See docs/API_LIMITATIONS.md."
+  }
+}
