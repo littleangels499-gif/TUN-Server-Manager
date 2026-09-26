@@ -145,7 +145,7 @@ export async function applyRestore(opts: RestoreOptions): Promise<RestoreResult>
         if (existingId) {
           const ch = await guild.channels.fetch(existingId);
           if (ch) {
-            await ch.setPosition(targetCat.position).catch(() => undefined);
+            await (ch as any).setPosition(targetCat.position).catch(() => undefined);
             result.categoriesUpdated.push(targetCat.name);
           }
         } else {

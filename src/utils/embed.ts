@@ -16,7 +16,7 @@ export function errorEmbed(message: string): EmbedBuilder {
   return baseEmbed("❌ Error", COLORS.danger).setDescription(message);
 }
 
-export function successEmbed(title: string, description?: string): EmbedBuilder {
+export function successEmbed(title: string, description?: string | null): EmbedBuilder {
   const e = baseEmbed(`✅ ${title}`, COLORS.success);
   if (description) e.setDescription(description);
   return e;

@@ -41,7 +41,7 @@ export async function guardGuildAdmin(interaction: ChatInputCommandInteraction):
 export async function safeExecute(
   interaction: ChatInputCommandInteraction,
   commandLabel: string,
-  fn: () => Promise<{ target?: string; details?: Record<string, unknown> } | void>
+  fn: () => Promise<{ target?: string | null; details?: Record<string, unknown> } | void>
 ): Promise<void> {
   try {
     const result = (await fn()) ?? {};
@@ -49,7 +49,7 @@ export async function safeExecute(
       guildId: interaction.guildId!,
       userId: interaction.user.id,
       command: commandLabel,
-      target: result.target,
+      target: result.target ?? undefined,
       details: result.details,
       success: true,
     });
