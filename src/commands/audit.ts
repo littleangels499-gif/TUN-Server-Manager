@@ -3,27 +3,25 @@ import { guardGuildAdmin, safeExecute } from "../utils/commandHelpers";
 import { baseEmbed } from "../utils/embed";
 import { queryAuditLog } from "../services/auditService";
 
-export const key = "audit";
+export const commandName = "tun-audit";
 
-export function register(tun: SlashCommandBuilder) {
-  tun.addSubcommandGroup((group) =>
-    group
-      .setName("audit")
-      .setDescription("View and search the administrative action log")
-      .addSubcommand((sub) =>
-        sub
-          .setName("view")
-          .setDescription("View recent audit log entries")
-          .addIntegerOption((opt) => opt.setName("limit").setDescription("How many entries (default 15, max 25)").setRequired(false))
-      )
-      .addSubcommand((sub) =>
-        sub
-          .setName("search")
-          .setDescription("Search the audit log")
-          .addStringOption((opt) => opt.setName("command").setDescription("Filter by command, e.g. 'blueprint restore'").setRequired(false))
-          .addUserOption((opt) => opt.setName("user").setDescription("Filter by who ran the command").setRequired(false))
-      )
-  );
+export function register(): SlashCommandBuilder {
+  const cmd = new SlashCommandBuilder().setName("tun-audit").setDescription("View and search the administrative action log");
+  cmd
+    .addSubcommand((sub) =>
+      sub
+        .setName("view")
+        .setDescription("View recent audit log entries")
+        .addIntegerOption((opt) => opt.setName("limit").setDescription("How many entries (default 15, max 25)").setRequired(false))
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("search")
+        .setDescription("Search the audit log")
+        .addStringOption((opt) => opt.setName("command").setDescription("Filter by command, e.g. 'blueprint restore'").setRequired(false))
+        .addUserOption((opt) => opt.setName("user").setDescription("Filter by who ran the command").setRequired(false))
+    );
+  return cmd;
 }
 
 function formatEntry(e: { userId: string; command: string; target: string | null; success: boolean; createdAt: Date; errorMsg: string | null }) {

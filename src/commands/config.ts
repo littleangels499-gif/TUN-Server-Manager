@@ -3,44 +3,40 @@ import { guardGuildAdmin, safeExecute } from "../utils/commandHelpers";
 import { addAdminRole, addAdminUser, getAdminConfig, removeAdminRole, removeAdminUser } from "../services/authService";
 import { baseEmbed, successEmbed } from "../utils/embed";
 
-export const key = "config";
+export const commandName = "tun-config";
 
-export function register(tun: SlashCommandBuilder) {
-  tun.addSubcommandGroup((group) =>
-    group
-      .setName("config")
-      .setDescription("Configure who can use TUN Server Manager admin commands (spec #14)")
-      .addSubcommand((sub) => sub.setName("view").setDescription("Show configured admin roles/users"))
-      .addSubcommand((sub) =>
-        sub
-          .setName("set-admin-role")
-          .setDescription("Authorize a role to use admin commands")
-          .addRoleOption((opt) => opt.setName("role").setDescription("Role to authorize").setRequired(true))
-      )
-      .addSubcommand((sub) =>
-        sub
-          .setName("remove-admin-role")
-          .setDescription("Revoke a role's admin access")
-          .addRoleOption((opt) => opt.setName("role").setDescription("Role to revoke").setRequired(true))
-      )
-      .addSubcommand((sub) =>
-        sub
-          .setName("set-admin-user")
-          .setDescription("Authorize a specific user to use admin commands")
-          .addUserOption((opt) => opt.setName("user").setDescription("User to authorize").setRequired(true))
-      )
-      .addSubcommand((sub) =>
-        sub
-          .setName("remove-admin-user")
-          .setDescription("Revoke a specific user's admin access")
-          .addUserOption((opt) => opt.setName("user").setDescription("User to revoke").setRequired(true))
-      )
-  );
+export function register(): SlashCommandBuilder {
+  const cmd = new SlashCommandBuilder().setName("tun-config").setDescription("Configure who can use TUN Server Manager admin commands");
+  cmd
+    .addSubcommand((sub) => sub.setName("view").setDescription("Show configured admin roles/users"))
+    .addSubcommand((sub) =>
+      sub
+        .setName("set-admin-role")
+        .setDescription("Authorize a role to use admin commands")
+        .addRoleOption((opt) => opt.setName("role").setDescription("Role to authorize").setRequired(true))
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("remove-admin-role")
+        .setDescription("Revoke a role's admin access")
+        .addRoleOption((opt) => opt.setName("role").setDescription("Role to revoke").setRequired(true))
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("set-admin-user")
+        .setDescription("Authorize a specific user to use admin commands")
+        .addUserOption((opt) => opt.setName("user").setDescription("User to authorize").setRequired(true))
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("remove-admin-user")
+        .setDescription("Revoke a specific user's admin access")
+        .addUserOption((opt) => opt.setName("user").setDescription("User to revoke").setRequired(true))
+    );
+  return cmd;
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  // Config changes are themselves security-sensitive, so require Discord
-  // Administrator or existing bot-admin status, same as everything else.
   if (!(await guardGuildAdmin(interaction))) return;
   const sub = interaction.options.getSubcommand();
 

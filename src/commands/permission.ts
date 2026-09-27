@@ -10,63 +10,61 @@ import { baseEmbed, successEmbed } from "../utils/embed";
 import { filterPermissionNames, isValidPermissionName } from "../utils/permissionsList";
 import { deleteTemplate, getTemplate, listTemplates, saveTemplate } from "../services/permissionTemplateService";
 
-export const key = "permission";
+export const commandName = "tun-permission";
 
-export function register(tun: SlashCommandBuilder) {
-  tun.addSubcommandGroup((group) =>
-    group
-      .setName("permission")
-      .setDescription("Manage role/user permission overwrites on categories and channels")
-      .addSubcommand((sub) =>
-        sub
-          .setName("set")
-          .setDescription("Set a permission overwrite to Allow, Deny or Inherit")
-          .addChannelOption((opt) => opt.setName("target").setDescription("Category or channel").setRequired(true))
-          .addStringOption((opt) => opt.setName("permission").setDescription("Permission name").setRequired(true).setAutocomplete(true))
-          .addStringOption((opt) =>
-            opt
-              .setName("state")
-              .setDescription("Allow, Deny or Inherit (clears the override)")
-              .setRequired(true)
-              .addChoices({ name: "Allow", value: "allow" }, { name: "Deny", value: "deny" }, { name: "Inherit", value: "inherit" })
-          )
-          .addRoleOption((opt) => opt.setName("role").setDescription("Role to apply this to").setRequired(false))
-          .addUserOption((opt) => opt.setName("user").setDescription("User to apply this to (instead of a role)").setRequired(false))
-      )
-      .addSubcommand((sub) =>
-        sub
-          .setName("remove")
-          .setDescription("Remove ALL overwrites for a role or user on a target")
-          .addChannelOption((opt) => opt.setName("target").setDescription("Category or channel").setRequired(true))
-          .addRoleOption((opt) => opt.setName("role").setDescription("Role to clear").setRequired(false))
-          .addUserOption((opt) => opt.setName("user").setDescription("User to clear (instead of a role)").setRequired(false))
-      )
-      .addSubcommand((sub) =>
-        sub
-          .setName("view")
-          .setDescription("View permission overwrites on a category or channel")
-          .addChannelOption((opt) => opt.setName("target").setDescription("Category or channel").setRequired(true))
-      )
-      .addSubcommand((sub) =>
-        sub
-          .setName("template")
-          .setDescription("Save, apply, list or delete a reusable permission template")
-          .addStringOption((opt) =>
-            opt
-              .setName("action")
-              .setDescription("What to do")
-              .setRequired(true)
-              .addChoices(
-                { name: "Save (capture a channel's overwrites)", value: "save" },
-                { name: "Apply (copy onto another channel)", value: "apply" },
-                { name: "List", value: "list" },
-                { name: "Delete", value: "delete" }
-              )
-          )
-          .addStringOption((opt) => opt.setName("name").setDescription("Template name").setRequired(false))
-          .addChannelOption((opt) => opt.setName("channel").setDescription("Source (save) or destination (apply) channel").setRequired(false))
-      )
-  );
+export function register(): SlashCommandBuilder {
+  const cmd = new SlashCommandBuilder().setName("tun-permission").setDescription("Manage role/user permission overwrites on categories and channels");
+  cmd
+    .addSubcommand((sub) =>
+      sub
+        .setName("set")
+        .setDescription("Set a permission overwrite to Allow, Deny or Inherit")
+        .addChannelOption((opt) => opt.setName("target").setDescription("Category or channel").setRequired(true))
+        .addStringOption((opt) => opt.setName("permission").setDescription("Permission name").setRequired(true).setAutocomplete(true))
+        .addStringOption((opt) =>
+          opt
+            .setName("state")
+            .setDescription("Allow, Deny or Inherit (clears the override)")
+            .setRequired(true)
+            .addChoices({ name: "Allow", value: "allow" }, { name: "Deny", value: "deny" }, { name: "Inherit", value: "inherit" })
+        )
+        .addRoleOption((opt) => opt.setName("role").setDescription("Role to apply this to").setRequired(false))
+        .addUserOption((opt) => opt.setName("user").setDescription("User to apply this to (instead of a role)").setRequired(false))
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("remove")
+        .setDescription("Remove ALL overwrites for a role or user on a target")
+        .addChannelOption((opt) => opt.setName("target").setDescription("Category or channel").setRequired(true))
+        .addRoleOption((opt) => opt.setName("role").setDescription("Role to clear").setRequired(false))
+        .addUserOption((opt) => opt.setName("user").setDescription("User to clear (instead of a role)").setRequired(false))
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("view")
+        .setDescription("View permission overwrites on a category or channel")
+        .addChannelOption((opt) => opt.setName("target").setDescription("Category or channel").setRequired(true))
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("template")
+        .setDescription("Save, apply, list or delete a reusable permission template")
+        .addStringOption((opt) =>
+          opt
+            .setName("action")
+            .setDescription("What to do")
+            .setRequired(true)
+            .addChoices(
+              { name: "Save (capture a channel's overwrites)", value: "save" },
+              { name: "Apply (copy onto another channel)", value: "apply" },
+              { name: "List", value: "list" },
+              { name: "Delete", value: "delete" }
+            )
+        )
+        .addStringOption((opt) => opt.setName("name").setDescription("Template name").setRequired(false))
+        .addChannelOption((opt) => opt.setName("channel").setDescription("Source (save) or destination (apply) channel").setRequired(false))
+    );
+  return cmd;
 }
 
 export async function autocomplete(interaction: AutocompleteInteraction) {
@@ -119,11 +117,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       const ch: any = await guild.channels.fetch(target.id);
 
       if (state === "allow") {
-        await ch.permissionOverwrites.edit(subject.id, { [permName]: true }, { reason: `Set by ${interaction.user.tag} via /tun permission set` });
+        await ch.permissionOverwrites.edit(subject.id, { [permName]: true }, { reason: `Set by ${interaction.user.tag} via /tun-permission set` });
       } else if (state === "deny") {
-        await ch.permissionOverwrites.edit(subject.id, { [permName]: false }, { reason: `Set by ${interaction.user.tag} via /tun permission set` });
+        await ch.permissionOverwrites.edit(subject.id, { [permName]: false }, { reason: `Set by ${interaction.user.tag} via /tun-permission set` });
       } else {
-        await ch.permissionOverwrites.edit(subject.id, { [permName]: null }, { reason: `Cleared by ${interaction.user.tag} via /tun permission set` });
+        await ch.permissionOverwrites.edit(subject.id, { [permName]: null }, { reason: `Cleared by ${interaction.user.tag} via /tun-permission set` });
       }
 
       await interaction.reply({ embeds: [successEmbed("Overwrite updated", `${target.name}: ${subject.label} → ${permName} = ${state}`)] });
@@ -134,7 +132,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       const target = interaction.options.getChannel("target", true);
       const subject = resolveSubject(interaction);
       const ch: any = await guild.channels.fetch(target.id);
-      await ch.permissionOverwrites.delete(subject.id, `Cleared by ${interaction.user.tag} via /tun permission remove`);
+      await ch.permissionOverwrites.delete(subject.id, `Cleared by ${interaction.user.tag} via /tun-permission remove`);
       await interaction.reply({ embeds: [successEmbed("Overwrite removed", `${target.name}: ${subject.label} now fully inherits.`)] });
       return { target: target.name, details: { subject: subject.label } };
     }

@@ -3,29 +3,27 @@ import { guardGuildAdmin, safeExecute } from "../utils/commandHelpers";
 import { baseEmbed, successEmbed } from "../utils/embed";
 import { addEmbassy, listEmbassies, removeEmbassy } from "../services/embassyService";
 
-export const key = "embassy";
+export const commandName = "tun-embassy";
 
-export function register(tun: SlashCommandBuilder) {
-  tun.addSubcommandGroup((group) =>
-    group
-      .setName("embassy")
-      .setDescription("Configure embassy channels and their external-alliance roles (spec #15)")
-      .addSubcommand((sub) =>
-        sub
-          .setName("add")
-          .setDescription("Register a channel as an embassy for an external alliance role")
-          .addChannelOption((opt) => opt.setName("channel").setDescription("Embassy channel").setRequired(true))
-          .addRoleOption((opt) => opt.setName("alliance_role").setDescription("Role for the external alliance's members").setRequired(true))
-          .addStringOption((opt) => opt.setName("label").setDescription("Friendly label, e.g. alliance name").setRequired(false))
-      )
-      .addSubcommand((sub) =>
-        sub
-          .setName("remove")
-          .setDescription("Unregister an embassy channel")
-          .addChannelOption((opt) => opt.setName("channel").setDescription("Embassy channel").setRequired(true))
-      )
-      .addSubcommand((sub) => sub.setName("list").setDescription("List configured embassy channels"))
-  );
+export function register(): SlashCommandBuilder {
+  const cmd = new SlashCommandBuilder().setName("tun-embassy").setDescription("Configure embassy channels and their external-alliance roles");
+  cmd
+    .addSubcommand((sub) =>
+      sub
+        .setName("add")
+        .setDescription("Register a channel as an embassy for an external alliance role")
+        .addChannelOption((opt) => opt.setName("channel").setDescription("Embassy channel").setRequired(true))
+        .addRoleOption((opt) => opt.setName("alliance_role").setDescription("Role for the external alliance's members").setRequired(true))
+        .addStringOption((opt) => opt.setName("label").setDescription("Friendly label, e.g. alliance name").setRequired(false))
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("remove")
+        .setDescription("Unregister an embassy channel")
+        .addChannelOption((opt) => opt.setName("channel").setDescription("Embassy channel").setRequired(true))
+    )
+    .addSubcommand((sub) => sub.setName("list").setDescription("List configured embassy channels"));
+  return cmd;
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -50,8 +48,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       const role = interaction.options.getRole("alliance_role", true);
       const label = interaction.options.getString("label") ?? undefined;
 
-      // Grant view access to the channel for the alliance role - the core
-      // point of an "embassy" channel per spec #15.
       const ch: any = await guild.channels.fetch(channel.id);
       if (ch && "permissionOverwrites" in ch) {
         await ch.permissionOverwrites.edit(role.id, { ViewChannel: true, SendMessages: true }, { reason: `Embassy configured by ${interaction.user.tag}` });

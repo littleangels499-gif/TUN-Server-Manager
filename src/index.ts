@@ -33,15 +33,11 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
   }
 
   if (!interaction.isChatInputCommand()) return;
-  if (interaction.commandName !== "tun") return;
-
-  if (interaction.guildId) await ensureGuild(interaction.guildId, interaction.guild?.name);
 
   const mod = findModule(interaction);
-  if (!mod) {
-    await interaction.reply({ embeds: [errorEmbed("Unknown command.")], ephemeral: true });
-    return;
-  }
+  if (!mod) return; // not one of ours - ignore silently
+
+  if (interaction.guildId) await ensureGuild(interaction.guildId, interaction.guild?.name);
 
   try {
     await mod.execute(interaction);

@@ -4,65 +4,62 @@ import { baseEmbed, successEmbed } from "../utils/embed";
 import { confirmAction } from "../utils/confirm";
 import { createSafetyBackup } from "../services/backupService";
 
-export const key = "role";
+export const commandName = "tun-role";
 
 const PROTECT_SLOTS = 5;
 const SELECT_SLOTS = 5;
 
-export function register(tun: SlashCommandBuilder) {
-  tun.addSubcommandGroup((group) => {
-    group
-      .setName("role")
-      .setDescription("Create, delete, edit, position, list and bulk-clear roles")
-      .addSubcommand((sub) =>
-        sub
-          .setName("create")
-          .setDescription("Create a new role")
-          .addStringOption((opt) => opt.setName("name").setDescription("Role name").setRequired(true))
-          .addStringOption((opt) => opt.setName("color").setDescription("Hex color, e.g. #5865F2").setRequired(false))
-          .addBooleanOption((opt) => opt.setName("hoist").setDescription("Display separately in the member list").setRequired(false))
-          .addBooleanOption((opt) => opt.setName("mentionable").setDescription("Allow anyone to @mention this role").setRequired(false))
-      )
-      .addSubcommand((sub) =>
-        sub
-          .setName("delete")
-          .setDescription("Delete a role")
-          .addRoleOption((opt) => opt.setName("role").setDescription("Role to delete").setRequired(true))
-      )
-      .addSubcommand((sub) =>
-        sub
-          .setName("edit")
-          .setDescription("Edit a role's properties")
-          .addRoleOption((opt) => opt.setName("role").setDescription("Role to edit").setRequired(true))
-          .addStringOption((opt) => opt.setName("name").setDescription("New name").setRequired(false))
-          .addStringOption((opt) => opt.setName("color").setDescription("New hex color, e.g. #5865F2").setRequired(false))
-          .addBooleanOption((opt) => opt.setName("hoist").setDescription("Display separately in the member list").setRequired(false))
-          .addBooleanOption((opt) => opt.setName("mentionable").setDescription("Allow anyone to @mention this role").setRequired(false))
-      )
-      .addSubcommand((sub) =>
-        sub
-          .setName("position")
-          .setDescription("Reposition a role in the hierarchy")
-          .addRoleOption((opt) => opt.setName("role").setDescription("Role to reposition").setRequired(true))
-          .addIntegerOption((opt) => opt.setName("position").setDescription("New position (higher = higher in hierarchy)").setRequired(true))
-      )
-      .addSubcommand((sub) => sub.setName("list").setDescription("List all roles"))
-      .addSubcommand((sub) => {
-        sub.setName("wipe-all").setDescription("Delete every deletable role, with optional protect slots to keep some");
-        for (let i = 1; i <= PROTECT_SLOTS; i++) {
-          sub.addRoleOption((opt) => opt.setName(`protect_${i}`).setDescription("A role to keep").setRequired(false));
-        }
-        return sub;
-      })
-      .addSubcommand((sub) => {
-        sub.setName("wipe-selected").setDescription("Delete a specific set of roles (up to 5) in one go");
-        for (let i = 1; i <= SELECT_SLOTS; i++) {
-          sub.addRoleOption((opt) => opt.setName(`role_${i}`).setDescription("A role to delete").setRequired(i === 1));
-        }
-        return sub;
-      });
-    return group;
-  });
+export function register(): SlashCommandBuilder {
+  const cmd = new SlashCommandBuilder().setName("tun-role").setDescription("Create, delete, edit, position, list and bulk-clear roles");
+  cmd
+    .addSubcommand((sub) =>
+      sub
+        .setName("create")
+        .setDescription("Create a new role")
+        .addStringOption((opt) => opt.setName("name").setDescription("Role name").setRequired(true))
+        .addStringOption((opt) => opt.setName("color").setDescription("Hex color, e.g. #5865F2").setRequired(false))
+        .addBooleanOption((opt) => opt.setName("hoist").setDescription("Display separately in the member list").setRequired(false))
+        .addBooleanOption((opt) => opt.setName("mentionable").setDescription("Allow anyone to @mention this role").setRequired(false))
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("delete")
+        .setDescription("Delete a role")
+        .addRoleOption((opt) => opt.setName("role").setDescription("Role to delete").setRequired(true))
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("edit")
+        .setDescription("Edit a role's properties")
+        .addRoleOption((opt) => opt.setName("role").setDescription("Role to edit").setRequired(true))
+        .addStringOption((opt) => opt.setName("name").setDescription("New name").setRequired(false))
+        .addStringOption((opt) => opt.setName("color").setDescription("New hex color, e.g. #5865F2").setRequired(false))
+        .addBooleanOption((opt) => opt.setName("hoist").setDescription("Display separately in the member list").setRequired(false))
+        .addBooleanOption((opt) => opt.setName("mentionable").setDescription("Allow anyone to @mention this role").setRequired(false))
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("position")
+        .setDescription("Reposition a role in the hierarchy")
+        .addRoleOption((opt) => opt.setName("role").setDescription("Role to reposition").setRequired(true))
+        .addIntegerOption((opt) => opt.setName("position").setDescription("New position (higher = higher in hierarchy)").setRequired(true))
+    )
+    .addSubcommand((sub) => sub.setName("list").setDescription("List all roles"))
+    .addSubcommand((sub) => {
+      sub.setName("wipe-all").setDescription("Delete every deletable role, with optional protect slots to keep some");
+      for (let i = 1; i <= PROTECT_SLOTS; i++) {
+        sub.addRoleOption((opt) => opt.setName(`protect_${i}`).setDescription("A role to keep").setRequired(false));
+      }
+      return sub;
+    })
+    .addSubcommand((sub) => {
+      sub.setName("wipe-selected").setDescription("Delete a specific set of roles (up to 5) in one go");
+      for (let i = 1; i <= SELECT_SLOTS; i++) {
+        sub.addRoleOption((opt) => opt.setName(`role_${i}`).setDescription("A role to delete").setRequired(i === 1));
+      }
+      return sub;
+    });
+  return cmd;
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -94,13 +91,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         color: (colorHex as any) ?? undefined,
         hoist,
         mentionable,
-        reason: `Created by ${interaction.user.tag} via /tun role create`,
+        reason: `Created by ${interaction.user.tag} via /tun-role create`,
       });
       await interaction.reply({ embeds: [successEmbed("Role created", `${created}`)] });
       return { target: created.name };
     }
 
-    // Hierarchy check up front for anything targeting a single existing role.
     if (["delete", "edit", "position"].includes(sub)) {
       const role = interaction.options.getRole("role", true);
       const fullRole = guild.roles.cache.get(role.id);
@@ -129,7 +125,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
       await createSafetyBackup(guild, interaction.user.id, `before deleting role ${role.name}`);
       const fullRole = guild.roles.cache.get(role.id);
-      await fullRole?.delete(`Deleted by ${interaction.user.tag} via /tun role delete`);
+      await fullRole?.delete(`Deleted by ${interaction.user.tag} via /tun-role delete`);
       await interaction.editReply({ embeds: [successEmbed("Role deleted", role.name)] });
       return { target: role.name };
     }
@@ -147,7 +143,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         color: (colorHex as any) ?? undefined,
         hoist: hoist ?? undefined,
         mentionable: mentionable ?? undefined,
-        reason: `Edited by ${interaction.user.tag} via /tun role edit`,
+        reason: `Edited by ${interaction.user.tag} via /tun-role edit`,
       });
       await interaction.editReply({ embeds: [successEmbed("Role updated", `${role}`)] });
       return { target: role.name };
@@ -157,7 +153,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       const role = interaction.options.getRole("role", true);
       const position = interaction.options.getInteger("position", true);
       const fullRole = guild.roles.cache.get(role.id)!;
-      await fullRole.setPosition(position, { reason: `Repositioned by ${interaction.user.tag} via /tun role position` });
+      await fullRole.setPosition(position, { reason: `Repositioned by ${interaction.user.tag} via /tun-role position` });
       await interaction.editReply({ embeds: [successEmbed("Role repositioned", `${role} → position ${position}`)] });
       return { target: role.name };
     }
@@ -169,10 +165,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         if (r) protectedIds.add(r.id);
       }
 
-      // @everyone and managed roles (bot roles, Booster role, etc.) can
-      // never be deleted by any bot - this is a hard Discord API limit,
-      // not a choice this bot is making, so they're excluded up front
-      // rather than surfacing as per-role errors.
       const candidates = guild.roles.cache.filter(
         (r) => r.id !== guild.id && !r.managed && !protectedIds.has(r.id)
       );

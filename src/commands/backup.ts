@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import { AutocompleteInteraction, ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { guardGuildAdmin, safeExecute } from "../utils/commandHelpers";
 import { baseEmbed, successEmbed } from "../utils/embed";
 import { confirmAction } from "../utils/confirm";
@@ -14,7 +14,7 @@ import { diffSnapshots, summarizeDiff } from "../services/diffService";
 import { captureSnapshot } from "../services/snapshotService";
 import { applyRestore, RestoreScope } from "../services/restoreService";
 
-export const key = "backup";
+export const commandName = "tun-backup";
 
 const SCOPE_CHOICES = [
   { name: "Everything", value: "full" },
@@ -23,46 +23,44 @@ const SCOPE_CHOICES = [
   { name: "Roles only", value: "roles" },
 ];
 
-export function register(tun: SlashCommandBuilder) {
-  tun.addSubcommandGroup((group) =>
-    group
-      .setName("backup")
-      .setDescription("Create, list, view, restore, delete and roll back backups (disaster recovery)")
-      .addSubcommand((sub) =>
-        sub
-          .setName("create")
-          .setDescription("Create a manual backup of the live server right now")
-          .addStringOption((opt) => opt.setName("label").setDescription("Label for this backup").setRequired(false))
-      )
-      .addSubcommand((sub) => sub.setName("list").setDescription("List available backups"))
-      .addSubcommand((sub) =>
-        sub
-          .setName("view")
-          .setDescription("View a backup's contents summary")
-          .addStringOption((opt) => opt.setName("id").setDescription("Backup ID (from /tun backup list)").setRequired(true).setAutocomplete(true))
-      )
-      .addSubcommand((sub) =>
-        sub
-          .setName("restore")
-          .setDescription("Preview and (after confirmation) restore a backup onto the live server")
-          .addStringOption((opt) => opt.setName("id").setDescription("Backup ID").setRequired(true).setAutocomplete(true))
-          .addStringOption((opt) => opt.setName("scope").setDescription("What to restore").setRequired(false).addChoices(...SCOPE_CHOICES))
-      )
-      .addSubcommand((sub) =>
-        sub
-          .setName("delete")
-          .setDescription("Delete a backup")
-          .addStringOption((opt) => opt.setName("id").setDescription("Backup ID").setRequired(true).setAutocomplete(true))
-      )
-      .addSubcommand((sub) =>
-        sub.setName("rollback").setDescription("Undo the last operation by restoring the most recent automatic safety backup")
-      )
-  );
+export function register(): SlashCommandBuilder {
+  const cmd = new SlashCommandBuilder().setName("tun-backup").setDescription("Create, list, view, restore, delete and roll back backups");
+  cmd
+    .addSubcommand((sub) =>
+      sub
+        .setName("create")
+        .setDescription("Create a manual backup of the live server right now")
+        .addStringOption((opt) => opt.setName("label").setDescription("Label for this backup").setRequired(false))
+    )
+    .addSubcommand((sub) => sub.setName("list").setDescription("List available backups"))
+    .addSubcommand((sub) =>
+      sub
+        .setName("view")
+        .setDescription("View a backup's contents summary")
+        .addStringOption((opt) => opt.setName("id").setDescription("Backup ID (from /tun-backup list)").setRequired(true).setAutocomplete(true))
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("restore")
+        .setDescription("Preview and (after confirmation) restore a backup onto the live server")
+        .addStringOption((opt) => opt.setName("id").setDescription("Backup ID").setRequired(true).setAutocomplete(true))
+        .addStringOption((opt) => opt.setName("scope").setDescription("What to restore").setRequired(false).addChoices(...SCOPE_CHOICES))
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("delete")
+        .setDescription("Delete a backup")
+        .addStringOption((opt) => opt.setName("id").setDescription("Backup ID").setRequired(true).setAutocomplete(true))
+    )
+    .addSubcommand((sub) =>
+      sub.setName("rollback").setDescription("Undo the last operation by restoring the most recent automatic safety backup")
+    );
+  return cmd;
 }
 
-export async function autocomplete(interaction: any) {
+export async function autocomplete(interaction: AutocompleteInteraction) {
   const focused = interaction.options.getFocused();
-  const backups = await listBackups(interaction.guildId, 25);
+  const backups = await listBackups(interaction.guildId!, 25);
   const choices = backups
     .filter((b) => b.label.toLowerCase().includes(focused.toLowerCase()) || b.id.includes(focused))
     .map((b) => ({ name: `${b.label} - ${b.createdAt.toISOString().slice(0, 16)} (${b.id.slice(0, 8)})`, value: b.id }));
@@ -82,7 +80,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           ? backups
               .map((b) => `• **${b.label}** _(${b.reason})_ - ${b.createdAt.toUTCString()} - \`${b.id.slice(0, 8)}\``)
               .join("\n")
-          : "No backups yet. Use `/tun backup create` or let TUN Server Manager create one automatically before a destructive change."
+          : "No backups yet. Use `/tun-backup create` or let TUN Server Manager create one automatically before a destructive change."
       );
       await interaction.reply({ embeds: [embed] });
       return;
@@ -99,7 +97,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     if (sub === "view") {
       const id = interaction.options.getString("id", true);
       const bk = await getBackup(guild.id, id);
-      if (!bk) throw new Error("Backup not found. Use /tun backup list to see valid IDs.");
+      if (!bk) throw new Error("Backup not found. Use /tun-backup list to see valid IDs.");
       const snap = parseBackupSnapshot(bk.data);
       const embed = baseEmbed(`🛟 Backup: ${bk.label}`).addFields(
         { name: "Reason", value: bk.reason, inline: true },
@@ -136,7 +134,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         throw new Error(
           sub === "rollback"
             ? "No automatic safety backup was found to roll back to. Safety backups are created automatically before destructive operations."
-            : "Backup not found. Use /tun backup list to see valid IDs."
+            : "Backup not found. Use /tun-backup list to see valid IDs."
         );
       }
 
@@ -158,9 +156,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       });
       if (!proceed) return;
 
-      // A rollback/restore is itself a major operation - snapshot the
-      // current (about-to-be-overwritten) state first so a bad rollback
-      // can itself be rolled back (spec #10).
       await createBackup(guild, `rollback-point before restoring ${bk.label}`, "rollback-point", interaction.user.id);
 
       const result = await applyRestore({ guild, target, scope, apply: true });

@@ -1,32 +1,28 @@
 import { ChannelType, ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { guardGuildAdmin, safeExecute } from "../utils/commandHelpers";
-import { baseEmbed, successEmbed } from "../utils/embed";
+import { successEmbed } from "../utils/embed";
 import { confirmAction } from "../utils/confirm";
 import { createSafetyBackup } from "../services/backupService";
 
-export const key = "server";
+export const commandName = "tun-server";
 
 const PROTECT_SLOTS = 5;
 
-export function register(tun: SlashCommandBuilder) {
-  tun.addSubcommandGroup((group) => {
-    group
-      .setName("server")
-      .setDescription("Whole-server structural operations - use with extreme care")
-      .addSubcommand((sub) => {
-        sub.setName("wipe").setDescription("Delete every category and channel on the server (protected items excluded)");
-        for (let i = 1; i <= PROTECT_SLOTS; i++) {
-          sub.addChannelOption((opt) =>
-            opt
-              .setName(`protect_${i}`)
-              .setDescription("A category or channel to keep - protecting a category also protects everything inside it")
-              .setRequired(false)
-          );
-        }
-        return sub;
-      });
-    return group;
+export function register(): SlashCommandBuilder {
+  const cmd = new SlashCommandBuilder().setName("tun-server").setDescription("Whole-server structural operations - use with extreme care");
+  cmd.addSubcommand((sub) => {
+    sub.setName("wipe").setDescription("Delete every category and channel on the server (protected items excluded)");
+    for (let i = 1; i <= PROTECT_SLOTS; i++) {
+      sub.addChannelOption((opt) =>
+        opt
+          .setName(`protect_${i}`)
+          .setDescription("A category or channel to keep - protecting a category also protects everything inside it")
+          .setRequired(false)
+      );
+    }
+    return sub;
   });
+  return cmd;
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -39,15 +35,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     await interaction.deferReply();
 
-    // Collect explicitly protected IDs from the protect_1..protect_5 options.
     const protectedIds = new Set<string>();
     for (let i = 1; i <= PROTECT_SLOTS; i++) {
       const protectedChannel = interaction.options.getChannel(`protect_${i}`);
       if (protectedChannel) protectedIds.add(protectedChannel.id);
     }
 
-    // Protecting a category cascades to protect every channel inside it,
-    // since "keep this category" implies "keep what's in it".
     for (const ch of guild.channels.cache.values()) {
       const anyCh = ch as any;
       if (anyCh.parentId && protectedIds.has(anyCh.parentId)) {
@@ -85,14 +78,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     let deletedCategories = 0;
     const errors: string[] = [];
 
-    // Delete ordinary channels first, then categories - deleting a category
-    // that still has non-protected children is harmless (they'd just be
-    // deleted separately in this same pass), but doing channels first keeps
-    // the operation's progress easy to reason about and avoids any brief
-    // moment where non-protected channels sit "uncategorized" mid-wipe.
     for (const ch of allChannels.values()) {
       try {
-        await ch.delete(`Server wipe by ${interaction.user.tag} via /tun server wipe`);
+        await ch.delete(`Server wipe by ${interaction.user.tag} via /tun-server wipe`);
         deletedChannels++;
       } catch (err: any) {
         errors.push(`${ch.name}: ${err?.message ?? "unknown error"}`);
@@ -102,7 +90,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     for (const ch of allCategories.values()) {
       try {
-        await ch.delete(`Server wipe by ${interaction.user.tag} via /tun server wipe`);
+        await ch.delete(`Server wipe by ${interaction.user.tag} via /tun-server wipe`);
         deletedCategories++;
       } catch (err: any) {
         errors.push(`${ch.name}: ${err?.message ?? "unknown error"}`);

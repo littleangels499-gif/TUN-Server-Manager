@@ -1,10 +1,10 @@
 import { REST, Routes } from "discord.js";
 import { env } from "./config";
-import { buildTunCommand } from "./commands";
+import { buildAllCommands } from "./commands";
 import { logger } from "./logger";
 
 /**
- * Registers the /tun command tree with Discord.
+ * Registers every TUN Server Manager command with Discord.
  *
  * - Default (no flag): registers to DEV_GUILD_ID if set - guild-scoped
  *   commands update INSTANTLY, which is what you want while developing.
@@ -14,14 +14,14 @@ import { logger } from "./logger";
 async function main() {
   const forceGlobal = process.argv.includes("--global");
   const rest = new REST({ version: "10" }).setToken(env.DISCORD_TOKEN);
-  const command = buildTunCommand().toJSON();
+  const commands = buildAllCommands().map((c) => c.toJSON());
 
   if (!forceGlobal && env.DEV_GUILD_ID) {
-    await rest.put(Routes.applicationGuildCommands(env.DISCORD_CLIENT_ID, env.DEV_GUILD_ID), { body: [command] });
-    logger.info(`Registered /tun to guild ${env.DEV_GUILD_ID} (instant).`);
+    await rest.put(Routes.applicationGuildCommands(env.DISCORD_CLIENT_ID, env.DEV_GUILD_ID), { body: commands });
+    logger.info(`Registered ${commands.length} commands to guild ${env.DEV_GUILD_ID} (instant).`);
   } else {
-    await rest.put(Routes.applicationCommands(env.DISCORD_CLIENT_ID), { body: [command] });
-    logger.info("Registered /tun globally (may take up to ~1 hour to propagate to all servers).");
+    await rest.put(Routes.applicationCommands(env.DISCORD_CLIENT_ID), { body: commands });
+    logger.info(`Registered ${commands.length} commands globally (may take up to ~1 hour to propagate to all servers).`);
   }
 }
 

@@ -4,7 +4,7 @@ import { baseEmbed, successEmbed } from "../utils/embed";
 import { confirmAction } from "../utils/confirm";
 import { createSafetyBackup } from "../services/backupService";
 
-export const key = "channel";
+export const commandName = "tun-channel";
 
 const CHANNEL_TYPE_CHOICES = [
   { name: "Text", value: "text" },
@@ -29,63 +29,61 @@ function resolveChannelType(value: string): ChannelType {
   }
 }
 
-export function register(tun: SlashCommandBuilder) {
-  tun.addSubcommandGroup((group) =>
-    group
-      .setName("channel")
-      .setDescription("Create, delete, rename, move, edit and list channels")
-      .addSubcommand((sub) =>
-        sub
-          .setName("create")
-          .setDescription("Create a new channel")
-          .addStringOption((opt) => opt.setName("name").setDescription("Channel name").setRequired(true))
-          .addStringOption((opt) => opt.setName("type").setDescription("Channel type").setRequired(false).addChoices(...CHANNEL_TYPE_CHOICES))
-          .addChannelOption((opt) =>
-            opt.setName("category").setDescription("Parent category").addChannelTypes(ChannelType.GuildCategory).setRequired(false)
-          )
-          .addStringOption((opt) => opt.setName("topic").setDescription("Channel topic").setRequired(false))
-      )
-      .addSubcommand((sub) =>
-        sub
-          .setName("delete")
-          .setDescription("Delete a channel")
-          .addChannelOption((opt) => opt.setName("channel").setDescription("Channel to delete").setRequired(true))
-      )
-      .addSubcommand((sub) =>
-        sub
-          .setName("rename")
-          .setDescription("Rename a channel")
-          .addChannelOption((opt) => opt.setName("channel").setDescription("Channel to rename").setRequired(true))
-          .addStringOption((opt) => opt.setName("new_name").setDescription("New name").setRequired(true))
-      )
-      .addSubcommand((sub) =>
-        sub
-          .setName("move")
-          .setDescription("Move a channel to a different category and/or position")
-          .addChannelOption((opt) => opt.setName("channel").setDescription("Channel to move").setRequired(true))
-          .addChannelOption((opt) =>
-            opt.setName("category").setDescription("New parent category").addChannelTypes(ChannelType.GuildCategory).setRequired(false)
-          )
-          .addIntegerOption((opt) => opt.setName("position").setDescription("New position within category").setRequired(false))
-      )
-      .addSubcommand((sub) =>
-        sub
-          .setName("edit")
-          .setDescription("Edit channel settings")
-          .addChannelOption((opt) => opt.setName("channel").setDescription("Channel to edit").setRequired(true))
-          .addStringOption((opt) => opt.setName("topic").setDescription("New topic").setRequired(false))
-          .addBooleanOption((opt) => opt.setName("nsfw").setDescription("Mark as age-restricted").setRequired(false))
-          .addIntegerOption((opt) => opt.setName("slowmode_seconds").setDescription("Slowmode in seconds (0 = off)").setRequired(false))
-      )
-      .addSubcommand((sub) =>
-        sub
-          .setName("list")
-          .setDescription("List channels")
-          .addChannelOption((opt) =>
-            opt.setName("category").setDescription("Only list channels in this category").addChannelTypes(ChannelType.GuildCategory).setRequired(false)
-          )
-      )
-  );
+export function register(): SlashCommandBuilder {
+  const cmd = new SlashCommandBuilder().setName("tun-channel").setDescription("Create, delete, rename, move, edit and list channels");
+  cmd
+    .addSubcommand((sub) =>
+      sub
+        .setName("create")
+        .setDescription("Create a new channel")
+        .addStringOption((opt) => opt.setName("name").setDescription("Channel name").setRequired(true))
+        .addStringOption((opt) => opt.setName("type").setDescription("Channel type").setRequired(false).addChoices(...CHANNEL_TYPE_CHOICES))
+        .addChannelOption((opt) =>
+          opt.setName("category").setDescription("Parent category").addChannelTypes(ChannelType.GuildCategory).setRequired(false)
+        )
+        .addStringOption((opt) => opt.setName("topic").setDescription("Channel topic").setRequired(false))
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("delete")
+        .setDescription("Delete a channel")
+        .addChannelOption((opt) => opt.setName("channel").setDescription("Channel to delete").setRequired(true))
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("rename")
+        .setDescription("Rename a channel")
+        .addChannelOption((opt) => opt.setName("channel").setDescription("Channel to rename").setRequired(true))
+        .addStringOption((opt) => opt.setName("new_name").setDescription("New name").setRequired(true))
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("move")
+        .setDescription("Move a channel to a different category and/or position")
+        .addChannelOption((opt) => opt.setName("channel").setDescription("Channel to move").setRequired(true))
+        .addChannelOption((opt) =>
+          opt.setName("category").setDescription("New parent category").addChannelTypes(ChannelType.GuildCategory).setRequired(false)
+        )
+        .addIntegerOption((opt) => opt.setName("position").setDescription("New position within category").setRequired(false))
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("edit")
+        .setDescription("Edit channel settings")
+        .addChannelOption((opt) => opt.setName("channel").setDescription("Channel to edit").setRequired(true))
+        .addStringOption((opt) => opt.setName("topic").setDescription("New topic").setRequired(false))
+        .addBooleanOption((opt) => opt.setName("nsfw").setDescription("Mark as age-restricted").setRequired(false))
+        .addIntegerOption((opt) => opt.setName("slowmode_seconds").setDescription("Slowmode in seconds (0 = off)").setRequired(false))
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("list")
+        .setDescription("List channels")
+        .addChannelOption((opt) =>
+          opt.setName("category").setDescription("Only list channels in this category").addChannelTypes(ChannelType.GuildCategory).setRequired(false)
+        )
+    );
+  return cmd;
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -119,7 +117,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         type: resolveChannelType(typeValue) as any,
         parent: category?.id,
         topic,
-        reason: `Created by ${interaction.user.tag} via /tun channel create`,
+        reason: `Created by ${interaction.user.tag} via /tun-channel create`,
       });
       await interaction.reply({ embeds: [successEmbed("Channel created", `${created} (\`${created.id}\`)`)] });
       return { target: created.name };
@@ -138,7 +136,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
       await createSafetyBackup(guild, interaction.user.id, `before deleting channel ${channel.name}`);
       const ch = await guild.channels.fetch(channel.id);
-      await ch?.delete(`Deleted by ${interaction.user.tag} via /tun channel delete`);
+      await ch?.delete(`Deleted by ${interaction.user.tag} via /tun-channel delete`);
       await interaction.editReply({ embeds: [successEmbed("Channel deleted", channel.name)] });
       return { target: channel.name };
     }
@@ -148,7 +146,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       const newName = interaction.options.getString("new_name", true);
       const ch: any = await guild.channels.fetch(channel.id);
       const oldName = ch.name;
-      await ch.setName(newName, `Renamed by ${interaction.user.tag} via /tun channel rename`);
+      await ch.setName(newName, `Renamed by ${interaction.user.tag} via /tun-channel rename`);
       await interaction.editReply({ embeds: [successEmbed("Channel renamed", `${oldName} → ${newName}`)] });
       return { target: newName, details: { oldName } };
     }
