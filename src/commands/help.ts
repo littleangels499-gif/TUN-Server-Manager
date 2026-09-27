@@ -13,9 +13,13 @@ const CATEGORIES: Record<string, { title: string; lines: string[] }> = {
       "`/tun server wipe` - delete EVERY category/channel, with up to 5 `protect_` slots to keep specific items (and anything inside a protected category)",
     ],
   },
-  roles: {
+    roles: {
     title: "🎭 Roles",
-    lines: ["`/tun role create|delete|edit|position|list` - manage roles (colour, hoist, mentionable, permissions, position)"],
+    lines: [
+      "`/tun role create|delete|edit|position|list` - manage roles (colour, hoist, mentionable, permissions, position)",
+      "`/tun role wipe-all` - delete every deletable role, with up to 5 `protect_` slots to keep some",
+      "`/tun role wipe-selected` - delete a specific set of up to 5 named roles in one go",
+    ],
   },
   permissions: {
     title: "🔐 Permissions",
